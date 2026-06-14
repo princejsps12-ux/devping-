@@ -1,4 +1,7 @@
 import express, { NextFunction, Request, Response } from 'express';
+// Patches Express so rejections from async route handlers reach the error
+// middleware instead of crashing the process. Must be imported before routes.
+import 'express-async-errors';
 import cors from 'cors';
 import { env } from './config/env';
 import routes from './routes';
