@@ -1,0 +1,39 @@
+# Local dependencies for DevPing development.
+#   docker compose up -d
+# Then in backend/.env:
+#   DATABASE_URL="postgresql://postgres:postgres@localhost:5432/devping?schema=public"
+#   REDIS_URL=redis://localhost:6379
+services:
+  postgres:
+    image: postgres:16
+    container_name: devping-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: devping
+    ports:
+      - "5432:5432"
+    volumes:
+      - devping_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    container_name: devping-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - devping_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  devping_pg:
+  devping_redis:

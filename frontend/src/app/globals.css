@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ----------------------------------------------------------------------------
+   Design tokens
+   - Accent + status colors are identical across themes and stored as RGB
+     channel triplets so Tailwind opacity modifiers work.
+   - Theme-specific tokens are full color values (some are rgba).
+   - Dark is the default theme (applied to :root and .dark).
+---------------------------------------------------------------------------- */
+:root {
+  --accent: 0 220 130; /* #00DC82 */
+  --status-up: 0 220 130; /* #00DC82 */
+  --status-down: 255 77 77; /* #FF4D4D */
+  --status-degraded: 255 178 36; /* #FFB224 */
+}
+
+:root,
+.dark {
+  --background: #0a0a0a;
+  --surface: #141414;
+  --surface-hover: #1a1a1a;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.14);
+  --text-primary: #ededed;
+  --text-secondary: #a1a1a1;
+  --text-muted: #6b6b6b;
+  --shimmer: rgba(255, 255, 255, 0.06);
+}
+
+.light {
+  --background: #ffffff;
+  --surface: #fafafa;
+  --surface-hover: #f4f4f4;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-hover: rgba(0, 0, 0, 0.14);
+  --text-primary: #171717;
+  --text-secondary: #525252;
+  --text-muted: #8f8f8f;
+  --shimmer: rgba(0, 0, 0, 0.05);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    @apply bg-background text-primary antialiased;
+    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.875rem; /* 14px base */
+    line-height: 1.6;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-medium tracking-tight text-primary;
+  }
+
+  /* Anything carrying data — numbers, URLs, timestamps — uses the mono face. */
+  .font-mono,
+  code,
+  kbd,
+  samp {
+    font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+    font-feature-settings: 'tnum' 1; /* tabular figures for aligned data */
+  }
+}

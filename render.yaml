@@ -1,0 +1,82 @@
+# Render Blueprint — deploys ALL of DevPing on Render:
+#   • devping-db     PostgreSQL
+#   • devping-redis  Key Value (Redis) for BullMQ
+#   • devping-api    Backend Web Service (Express API + in-process worker)
+#   • devping-web    Frontend Web Service (Next.js)
+#
+# This file must live at the ROOT of the repo you connect to Render. If your
+# repo root is the parent of `devping/`, prefix each `rootDir` with `devping/`.
+#
+# Note: Render's managed Redis is the "Key Value" service (type: keyvalue). If
+# your account still shows the older schema, change it to `type: redis`.
+
+databases:
+  - name: devping-db
+    databaseName: devping
+    plan: free # bump to `starter`+ for real durability
+
+services:
+  # --- Redis (BullMQ queue) ---
+  - type: keyvalue
+    name: devping-redis
+    plan: free
+    ipAllowList: [] # only reachable from within the Render network
+
+  # --- Backend: Express API + in-process ping worker ---
+  - type: web
+    name: devping-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install && npm run prisma:generate && npm run build
+    preDeployCommand: npm run prisma:deploy # run migrations before going live
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # PORT is injected by Render — the app binds to process.env.PORT.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: devping-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: devping-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true # Render generates a strong secret
+      # The ping worker runs in-process here (RUN_WORKER left unset = enabled).
+      # For horizontal scale, set RUN_WORKER=false and add a separate worker
+      # service running `npm run start:worker` (see DEPLOYMENT.md).
+      # Set these in the dashboard after the frontend URL is known:
+      - key: CORS_ORIGIN # e.g. https://devping-web.onrender.com
+        sync: false
+      - key: APP_URL # e.g. https://devping-web.onrender.com
+        sync: false
+      - key: RESEND_API_KEY # optional — email alerts
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: GROQ_API_KEY # optional — AI analysis
+        sync: false
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+
+  # --- Frontend: Next.js ---
+  - type: web
+    name: devping-web
+    runtime: node
+    rootDir: frontend
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Baked in at build time — must point at the API's public URL + /api.
+      - key: NEXT_PUBLIC_API_URL # e.g. https://devping-api.onrender.com/api
+        sync: false

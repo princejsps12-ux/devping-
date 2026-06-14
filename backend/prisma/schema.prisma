@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PingStatus {
+  UP
+  DOWN
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  username  String?   @unique
+  password  String
+  name      String
+  createdAt DateTime  @default(now())
+
+  monitors  Monitor[]
+}
+
+model Monitor {
+  id        String    @id @default(cuid())
+  userId    String
+  name      String
+  url       String
+  interval  Int       @default(60)
+  isActive  Boolean   @default(true)
+  isPublic  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+
+  // Latest AI anomaly assessment (low | medium | high).
+  aiRisk      String?
+  aiReason    String?
+  aiCheckedAt DateTime?
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pings     Ping[]
+  incidents Incident[]
+
+  @@index([userId])
+}
+
+model Ping {
+  id           String     @id @default(cuid())
+  monitorId    String
+  status       PingStatus
+  responseTime Int?
+  // Comma-separated region(s) that reported a failure (null when all healthy).
+  region       String?
+  checkedAt    DateTime   @default(now())
+
+  monitor      Monitor    @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+
+  @@index([monitorId])
+}
+
+model Incident {
+  id         String    @id @default(cuid())
+  monitorId  String
+  startedAt  DateTime  @default(now())
+  resolvedAt DateTime?
+
+  monitor    Monitor   @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+
+  @@index([monitorId])
+}
