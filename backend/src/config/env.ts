@@ -29,7 +29,7 @@ export const env = {
     .trim(),
   // AI anomaly detection (Groq). Optional — analysis is disabled without a key.
   groqApiKey: process.env.GROQ_API_KEY ?? '',
-  groqModel: process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile',
+  groqModel: process.env.GROQ_MODEL ?? 'openai/gpt-oss-120b',
   // Redis (BullMQ) — required for the ping queue/worker.
   redisUrl: process.env.REDIS_URL ?? 'redis://localhost:6379',
 };
